@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/GameScene/EnterScene.unity
+    guid: d8ecb6aa46a00854eae88a0ac4a88e2c
+  - enabled: 1
+    path: Assets/Scenes/GameScene/SceneSJXZ.unity
+    guid: 35f7ba8a7d2054943891f0b52cb57aa8
+  - enabled: 1
+    path: Assets/Scenes/GameScene/SceneHGT.unity
+    guid: fbc72848a27c42c44b8af8c07dc91b6c
+  - enabled: 1
+    path: Assets/Scenes/GameScene/SceneSMYT.unity
+    guid: 7546a38c9733b6049a968fec18608135
+  m_configObjects:
+    Unity.XR.Qiyu.Settings: {fileID: 11400000, guid: 1b330ea4061ee6c4c8e5d754d00c5120,
+      type: 2}
+    com.unity.input.settings: {fileID: 11400000, guid: a112d8a8110f7004689de5ed8b56916e,
+      type: 2}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: ec546769cdf24c94ab2d1b908da079c3,
+      type: 2}
