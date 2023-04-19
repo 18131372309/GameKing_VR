@@ -19,17 +19,20 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
     private bool rightTrigger = false;
 
     private bool leftFirstKey = false;
+    private int leftFirstKeyTimes = 0;
     private bool leftSecondKey = false;
+    private int leftSecondKeyTimes = 0;
 
     private bool rightFirstKey = false;
     private int rightFirstKeyTimes = 0;
-    
+
     private bool rightSecondKey = false;
     private int rightSecondKeyTimes = 0;
 
     private Vector2 right2DAxis;
 
     private bool isAxisForwordUp = false;
+
     // private bool rightAxisForwordDown = false;
     //
     // private int rightAxisForwordDowmTimes = 0;
@@ -42,7 +45,6 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
     {
         InitDevices();
         // XRSceneManager.GetInstance.cs += ChangeSceneInit;
-       
     }
 
     void ChangeSceneInit()
@@ -69,24 +71,24 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
     //所有按键的检测
     private void XrKeyDownCheck()
     {
-        if (rightController.TryGetFeatureValue(CommonUsages.primary2DAxis,out right2DAxis))
+        if (rightController.TryGetFeatureValue(CommonUsages.primary2DAxis, out right2DAxis))
         {
-           // XRDebug.Log(right2DAxis.y.ToString());
+            // XRDebug.Log(right2DAxis.y.ToString());
             if (right2DAxis.y > 0f)
             {
                 isAxisForwordUp = false;
                 XRTeleportController.GetInstance.OnEnterTeleport();
-            }else
+            }
+            else
             {
                 if (!isAxisForwordUp)
                 {
                     XRTeleportController.GetInstance.OnExitTeleport();
                     isAxisForwordUp = true;
                 }
-                
             }
         }
-        
+
         if (leftController.TryGetFeatureValue(CommonUsages.grip, out leftGripValue) && leftGripValue > 0)
         {
             // XRDebug.Log("L-Grip" + leftGripValue);
@@ -130,9 +132,35 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
             // XRDebug.Log("R-Trigger:" + rightTrigger);
         }
 
-        if (leftController.TryGetFeatureValue(CommonUsages.primaryButton, out leftFirstKey) && leftFirstKey)
+        if (leftController.TryGetFeatureValue(CommonUsages.primaryButton, out leftFirstKey))
         {
             //  XRDebug.Log("L-primaryButton:" + leftFirstKey);
+            //TODO 临时展示FPS
+
+            if (leftFirstKey)
+            {
+                leftFirstKeyTimes++;
+                if (leftFirstKeyTimes == 1)
+                {
+                    GameObject fps = XROriginInstance.XROriginObj.transform
+                        .Find("Camera Offset/Main Camera/XRFollowCanvas/MenuPanel/FPSText").gameObject;
+                    if (fps.activeInHierarchy)
+                    {
+                        fps.SetActive(false);
+                    }
+                    else
+                    {
+                        fps.SetActive(true);
+                    }
+                }
+            }
+            else
+            {
+                if (leftFirstKeyTimes != 0)
+                {
+                    leftFirstKeyTimes = 0;
+                }
+            }
         }
 
         if (rightController.TryGetFeatureValue(CommonUsages.primaryButton, out rightFirstKey))
@@ -142,20 +170,50 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
                 rightFirstKeyTimes++;
                 if (rightFirstKeyTimes == 1)
                 {
-                    EventDispatcher.GetInstance().DispatchEvent("change_view", null);
+                   UIManager.GetInstance.ShowViewModeSelectUi();
                 }
             }
             else
             {
-                rightFirstKeyTimes = 0;
+                if (rightFirstKeyTimes != 0)
+                {
+                    rightFirstKeyTimes = 0;
+                }
             }
 
             // XRDebug.Log("R-primaryButton:" + rightFirstKey);
         }
 
-        if (leftController.TryGetFeatureValue(CommonUsages.secondaryButton, out leftSecondKey) && leftSecondKey)
+        if (leftController.TryGetFeatureValue(CommonUsages.secondaryButton, out leftSecondKey))
         {
             //  XRDebug.Log("L-secondaryButton:" + leftSecondKey);
+            
+
+            if (leftSecondKey)
+            {
+                leftSecondKeyTimes++;
+                if (leftSecondKeyTimes == 1)
+                {
+                    // //TODO 测试下坠感
+                    // if (XROriginInstance.XROriginObj.GetComponent<Rigidbody>() != null)
+                    // {
+                    //     GameObject.Destroy(XROriginInstance.XROriginObj.GetComponent<Rigidbody>());
+                    // }
+                    // else
+                    // {
+                    //     XROriginInstance.XROriginObj.AddComponent<Rigidbody>();
+                    // }
+                  //  XRDebug.Log("change_sandBoxMode");
+                  //  EventDispatcher.GetInstance().DispatchEvent("change_sandBoxMode");
+                }
+            }
+            else
+            {
+                if (leftSecondKeyTimes != 0)
+                {
+                    leftSecondKeyTimes = 0;
+                }
+            }
         }
 
         if (rightController.TryGetFeatureValue(CommonUsages.secondaryButton, out rightSecondKey) &&
@@ -167,12 +225,15 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
                 rightSecondKeyTimes++;
                 if (rightSecondKeyTimes == 1)
                 {
-                  XRSceneManager.GetInstance.TeleportDifferentScene("EnterScene");
+                    // XRSceneManager.GetInstance.TeleportDifferentScene("EnterScene");
                 }
             }
             else
             {
-                rightSecondKeyTimes = 0;
+                if (rightSecondKeyTimes != 0)
+                {
+                    rightSecondKeyTimes = 0;
+                }
             }
         }
     }

@@ -39,19 +39,30 @@ public class SelectScene : MonoBehaviour
 
     private int currentPageIndex = 0;
 
+    private int startIndex = 0;
+
     private void Start()
     {
         //  InitListener();
         InitData();
-        Debug.Log("ssss"+XRSettings.eyeTextureResolutionScale); 
+        Debug.Log("ssss" + XRSettings.eyeTextureResolutionScale);
        // Invoke("ShowNextSceneItem",2f);
+      
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            SceneManager.LoadScene("SceneSMYT");
+        }
     }
 
     void InitData()
     {
         sceneItemPrefab = Resources.Load("EnterScenePrefabs/sceneItem") as GameObject;
         itemPositionList = new List<Vector3>();
-        itemObjList=new List<GameObject>();
+        itemObjList = new List<GameObject>();
 
         lastBtbObj.GetComponent<Button>().onClick.AddListener(ShowLastSceneItem);
         nextBtnObj.GetComponent<Button>().onClick.AddListener(ShowNextSceneItem);
@@ -76,7 +87,11 @@ public class SelectScene : MonoBehaviour
             lastBtbObj.SetActive(false);
         }
 
-        itemParent.DOLocalMove(itemPositionList[currentPageIndex], 1f);
+        itemParent.DOLocalMove(itemPositionList[currentPageIndex], 0.1f);
+
+
+        startIndex--;
+        SetCurvedUI(startIndex);
     }
 
     void ShowNextSceneItem()
@@ -93,8 +108,10 @@ public class SelectScene : MonoBehaviour
         }
 
         Debug.Log(itemPositionList[currentPageIndex]);
-        itemParent.DOLocalMove(itemPositionList[currentPageIndex], 1f);
-        
+        itemParent.DOLocalMove(itemPositionList[currentPageIndex], 0.1f);
+
+        startIndex++;
+        SetCurvedUI(startIndex);
     }
 
     // 多个场景时（>3），位置排列
@@ -134,23 +151,31 @@ public class SelectScene : MonoBehaviour
             {
                 nextBtnObj.SetActive(true);
             }
-            
-            SetCurvedUI();
+
+            startIndex = 0;
+            SetCurvedUI(startIndex);
         });
-        
-      
     }
 
-    void SetCurvedUI()
+    void SetCurvedUI(int startIndex)
     {
         Debug.Log(itemObjList.Count);
-        //TODO: 切换UI时进行队列出队列
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < itemObjList.Count; i++)
         {
-            itemObjList[i].transform.parent = itemParent.GetChild(i);
+            itemObjList[i].transform.parent = itemParent;
+        }
+
+        int j = 0;
+        //TODO: 待测试
+        for (int i = startIndex; i < startIndex + 3; i++)
+        {
+            itemObjList[i].transform.parent = itemParent.parent.GetChild(j);
             itemObjList[i].transform.localEulerAngles = Vector3.zero;
             itemObjList[i].transform.localPosition = Vector3.zero;
+
+            j++;
         }
+
         // int index = 0;
         // foreach (var VARIABLE in itemObjList)
         // {

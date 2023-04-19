@@ -14,7 +14,13 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
     private RaycastHit hitInfo;
 
     private bool rightTriggrtDown = false;
+    private int rightTriggerTimes = 0;
+    private bool gripButtonDown = false;
 
+    private Vector3 devicePosition;
+    private bool isRotatingModel = false;
+
+    private Quaternion deviceRotation;
     // Start is called before the first frame update
     void Start()
     {
@@ -38,7 +44,7 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
     }
 
     //初始化设备信息
-    //TODO:手柄掉綫重連 
+    //TODO:手柄掉綫重連？验证API 
     void InitDevices()
     {
         rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
@@ -50,7 +56,16 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
     // Update is called once per frame
     void Update()
     {
+        // Vector3 v;
+        // rightController.TryGetFeatureValue(CommonUsages.devicePosition, out v);
+        // XRDebug.Log(v.ToString()); 
         RayCastUpdate();
+        
+        //TODO:Update检测恢复
+        // if (!rightController.isValid)
+        // {
+        //     
+        // }
     }
 
     /// <summary>
@@ -60,6 +75,8 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
     {
         if (rightRay.TryGetCurrent3DRaycastHit(out hitInfo) && hitInfo.collider != null)
         {
+            // XRDebug.Log(hitInfo.point.ToString());
+            // TODO：传送检测封装，输入系统封装
             if (hitInfo.collider.gameObject.GetComponent<ScenePortal>())
             {
                 if (rightController.TryGetFeatureValue(CommonUsages.triggerButton, out rightTriggrtDown) &&
@@ -81,6 +98,52 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
                             .GetComponent<ScenePortal>().DifferentSceneName);
                     }
                 }
+            }
+
+            //:沙盘
+            if (hitInfo.collider.CompareTag("sandBoxModel"))
+            {
+                if (rightController.TryGetFeatureValue(CommonUsages.gripButton, out gripButtonDown))
+                {
+
+                    if (gripButtonDown)
+                    {
+                        isRotatingModel = true;
+                        rightController.TryGetFeatureValue(CommonUsages.devicePosition, out devicePosition);
+                        rightController.TryGetFeatureValue(CommonUsages.deviceRotation, out deviceRotation);
+                        SandBoxModule.GetInstance().DoRotateModel(devicePosition,deviceRotation);
+                    }
+                    else
+                    {
+                        if (isRotatingModel)
+                        {
+                            SandBoxModule.GetInstance().StopRotateModel();
+                            isRotatingModel = false;
+                        }
+                       
+                    }
+                  
+                }
+
+                //射線指向退出沙盤
+                // if (rightController.TryGetFeatureValue(CommonUsages.triggerButton, out rightTriggrtDown))
+                // {
+                //     if (rightTriggrtDown)
+                //     {
+                //         rightTriggerTimes++;
+                //         if (rightTriggerTimes == 1)
+                //         {
+                //             EventDispatcher.GetInstance().DispatchEvent("change_sandBoxMode");
+                //         }
+                //     }
+                //     else
+                //     {
+                //         if (rightTriggerTimes != 0)
+                //         {
+                //             rightTriggerTimes = 0;
+                //         }
+                //     }
+                // }
             }
         }
     }

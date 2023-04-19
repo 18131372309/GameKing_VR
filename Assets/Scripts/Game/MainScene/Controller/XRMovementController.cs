@@ -17,7 +17,7 @@ public class XRMovementController : SingleTonMono<XRMovementController>
     private Transform XRCameraTrans;
     private Transform XROriginTrans;
 
-    private Vector3 tempXRPosition = Vector3.zero;
+    [HideInInspector] public Vector3 tempXRPosition = Vector3.zero;
     // private float tempZ=0;
 
     public bool usePhysics = false;
@@ -29,17 +29,9 @@ public class XRMovementController : SingleTonMono<XRMovementController>
         Rigidbody
     }
 
-    enum ViewMode
-    {
-        Ground,
-        Sky
-    }
-
-    private ViewMode curViewMode;
-
-    private float groundLimit_Y = 0.5f;
-    private float skyLimit_Y = 80;
-    private float moveLimt_y = 0;
+    // private float groundLimit_Y = 0f;
+    // private float skyLimit_Y = 80;
+    [HideInInspector] public float moveLimt_y = 0;
 
     private float boundaryLimit_X = 800;
     private float boundaryLimit_Z = 600;
@@ -48,8 +40,8 @@ public class XRMovementController : SingleTonMono<XRMovementController>
     void Start()
     {
         InitDevices();
-        curViewMode = ViewMode.Ground;
-        EventDispatcher.GetInstance().Register("change_view", ChangeViewMode);
+        // XROriginInstance.curViewMode = ViewMode.Ground;
+        // EventDispatcher.GetInstance().Register("change_view", ChangeViewMode);
         // XRSceneManager.GetInstance.cs += ChangeSceneInit;
         // XROrigin = XROriginInstance.XROriginObj;
         // InvokeRepeating("TestPrintY", 1f, 1);
@@ -62,11 +54,14 @@ public class XRMovementController : SingleTonMono<XRMovementController>
         {
             XROriginTrans.GetComponent<CharacterController>().enabled = false;
         }
+
+         // Invoke("TestPrintY",2f);
     }
 
     void TestPrintY()
     {
         XRDebug.Log("Y:" + XROriginTrans.position.y);
+        UIManager.GetInstance.ChangeViewMode(ViewMode.Sky);
     }
 
     void ChangeSceneInit()
@@ -78,43 +73,64 @@ public class XRMovementController : SingleTonMono<XRMovementController>
     //TODO:手柄掉綫重連 
     void InitDevices()
     {
-       
         leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
 
         XRCameraTrans = XROriginInstance.XROriginObj.GetComponentInChildren<Camera>().transform;
         XROriginTrans = XROriginInstance.XROriginObj.transform;
-        
-        groundLimit_Y = XROriginTrans.position.y;
-        moveLimt_y = groundLimit_Y;
+
+        // groundLimit_Y = XROriginTrans.position.y;
+        // moveLimt_y = groundLimit_Y;
+        // tempXRPosition = XROriginTrans.position;
     }
 
     /// <summary>
     /// 切换视角模式
     /// </summary>
     /// <param name="objs"></param>
-    void ChangeViewMode(object[] objs)
-    {
-        if (curViewMode == ViewMode.Ground)
-        {
-            tempXRPosition = XROriginTrans.position;
-            
-            moveLimt_y = skyLimit_Y;
-            curViewMode = ViewMode.Sky;
-            TeleportXROrigin(new Vector3(0, skyLimit_Y, 0), Quaternion.identity);
-        }
-        else if (curViewMode == ViewMode.Sky)
-        {
-            moveLimt_y = groundLimit_Y;
-            curViewMode = ViewMode.Ground;
-            TeleportXROrigin(tempXRPosition, Quaternion.identity);
-        }
-    }
+    // void ChangeViewMode(object[] objs)
+    // {
+    //     if ((ViewMode)objs[0] == ViewMode.Sky)
+    //     {
+    //      
+    //         //目前只纪录切换sky模式前的位置信息
+    //         tempXRPosition = XROriginTrans.position;
+    //         moveLimt_y = skyLimit_Y;
+    //         XROriginInstance.curViewMode = ViewMode.Sky;
+    //         TeleportXROrigin(new Vector3(0, skyLimit_Y, 0), Quaternion.identity);
+    //         
+    //     }
+    //     else if ((ViewMode)objs[0] == ViewMode.Ground)
+    //     {
+    //       
+    //         moveLimt_y = groundLimit_Y;
+    //         XROriginInstance.curViewMode = ViewMode.Ground;
+    //         TeleportXROrigin(tempXRPosition, Quaternion.identity);
+    //         
+    //     }
+    //     
+    // }
 
     // Update is called once per frame
     void Update()
     {
         // TurnCheck();
         TouchMoveCheck();
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            UIManager.GetInstance.ChangeViewMode(ViewMode.Ground);
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            UIManager.GetInstance.ChangeViewMode(ViewMode.Sky);
+        }
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            UIManager.GetInstance.ChangeViewMode(ViewMode.SandBox);
+        }
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            UIManager.GetInstance.ReturnEnterScene();
+        }
     }
 
     /// <summary>
@@ -124,41 +140,45 @@ public class XRMovementController : SingleTonMono<XRMovementController>
     {
         if (leftController.TryGetFeatureValue(CommonUsages.primary2DAxis, out axis) && !axis.Equals(Vector2.zero))
         {
-            if (axis.y > 0)
+            if (XROriginInstance.curViewMode != ViewMode.SandBox)
             {
-                if (usePhysics && curViewMode == ViewMode.Ground)
+                if (axis.y > 0)
                 {
-                    XROriginTrans.GetComponent<CharacterController>()
-                        .SimpleMove(XRCameraTrans.forward * 60f * Time.deltaTime);
-                }
-                else
-                {
-                    XROriginTrans.Translate(XRCameraTrans.forward * 3.5f * Time.deltaTime);
+                    if (usePhysics && XROriginInstance.curViewMode == ViewMode.Ground)
+                    {
+                        XROriginTrans.GetComponent<CharacterController>()
+                            .SimpleMove(XRCameraTrans.forward * 60f * Time.deltaTime);
+                    }
+                    else
+                    {
+                        XROriginTrans.Translate(XRCameraTrans.forward * 3.5f * Time.deltaTime);
+                    }
+
+                    // XRDebug.Log(XRCameraTrans.forward.ToString());
+                    BoundaryCheck();
                 }
 
-                // XRDebug.Log(XRCameraTrans.forward.ToString());
-                BoundaryCheck();
-            }
-
-            //TODO 不要后退
-            else
-            {
-                if (usePhysics && curViewMode == ViewMode.Ground)
-                {
-                    XROriginTrans.GetComponent<CharacterController>()
-                        .SimpleMove(XRCameraTrans.forward * -60f * Time.deltaTime);
-                }
+                //TODO 不要后退
                 else
                 {
-                    XROriginTrans.Translate(XRCameraTrans.forward * -3.5f * Time.deltaTime);
+                    if (usePhysics && XROriginInstance.curViewMode == ViewMode.Ground)
+                    {
+                        XROriginTrans.GetComponent<CharacterController>()
+                            .SimpleMove(XRCameraTrans.forward * -60f * Time.deltaTime);
+                    }
+                    else
+                    {
+                        XROriginTrans.Translate(XRCameraTrans.forward * -3.5f * Time.deltaTime);
+                    }
+
+                    BoundaryCheck();
                 }
-                BoundaryCheck();
             }
         }
     }
 
     /// <summary>
-    /// 边界检测
+    /// TODO：边界检测，目前仅适合通州，之后再适配所有场景
     /// </summary>
     void BoundaryCheck()
     {
@@ -273,6 +293,6 @@ public class XRMovementController : SingleTonMono<XRMovementController>
     protected override void UnInit()
     {
         base.UnInit();
-        EventDispatcher.GetInstance().UnRegister("change_view", ChangeViewMode);
+        //   EventDispatcher.GetInstance().UnRegister("change_view", ChangeViewMode);
     }
 }

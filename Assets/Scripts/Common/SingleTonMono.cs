@@ -8,7 +8,7 @@ public class SingleTonMono<T> : MonoBehaviour where T : MonoBehaviour
    // public static bool applicationIsQuitting = false;
 
     private static T _instance;
-
+ 
     private static object _lock = new object();
 
     public static T GetInstance

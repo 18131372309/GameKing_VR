@@ -31,11 +31,11 @@ public class XRLogManager : SingleTonMono<XRLogManager>
     {
         Debug.Log("XRLogInit:");
         logPanel = XROriginInstance.XROriginObj.transform
-            .Find("Camera Offset/Main Camera/Canvas/MenuPanel/XRLog").gameObject;
+            .Find("Camera Offset/Main Camera/XRFollowCanvas/MenuPanel/XRLog").gameObject;
         logButton = XROriginInstance.XROriginObj.transform
-            .Find("Camera Offset/Main Camera/Canvas/MenuPanel/XRLog/LogButton").GetComponent<Button>();
+            .Find("Camera Offset/Main Camera/XRFollowCanvas/MenuPanel/XRLog/LogButton").GetComponent<Button>();
         logText = XROriginInstance.XROriginObj.transform
-            .Find("Camera Offset/Main Camera/Canvas/MenuPanel/XRLog/LogText").GetComponent<Text>();
+            .Find("Camera Offset/Main Camera/XRFollowCanvas/MenuPanel/XRLog/LogText").GetComponent<Text>();
         if (logButton != null)
         {
             logButton.onClick.AddListener(ShowLogText);
