@@ -10,7 +10,7 @@ public delegate void D_OnEnterScene(string name);
 public class GameTimingManager : MonoBehaviour
 {
     public static GameTimingManager Instance;
-    private D_OnEnterScene _onEnterScene;
+    public D_OnEnterScene _onEnterScene;
 
     void Awake()
     {
@@ -25,6 +25,8 @@ public class GameTimingManager : MonoBehaviour
 
             DontDestroyOnLoad(this.gameObject);
         }
+
+       
     }
 
     // public void AddListener(D_OnEnterScene listener)
@@ -32,11 +34,11 @@ public class GameTimingManager : MonoBehaviour
     //     _onEnterScene += listener;
     // }
 
-    // public void OnEnterScene(string name)
-    // {
-    //     _onEnterScene.Invoke(name);
-    //     Debug.Log("_onEnterScene:"+name);
-    // }
+    public void OnEnterScene(string name)
+    {
+        _onEnterScene.Invoke(name);
+        Debug.Log("_onEnterScene:"+name);
+    }
 
     /// <summary>
     /// 获取当前场景名称

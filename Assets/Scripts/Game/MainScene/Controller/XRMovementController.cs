@@ -70,10 +70,11 @@ public class XRMovementController : SingleTonMono<XRMovementController>
         //Debug.Log("ChangeSceneInit");
     }
 
-    //TODO:手柄掉綫重連 
+    //手柄掉綫重連 
     void InitDevices()
     {
         leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+        InputDevices.deviceConnected += RegisterDevices;
 
         XRCameraTrans = XROriginInstance.XROriginObj.GetComponentInChildren<Camera>().transform;
         XROriginTrans = XROriginInstance.XROriginObj.transform;
@@ -82,7 +83,21 @@ public class XRMovementController : SingleTonMono<XRMovementController>
         // moveLimt_y = groundLimit_Y;
         // tempXRPosition = XROriginTrans.position;
     }
+    
+    //TODO: 统一管理 手柄断线重连
+    void RegisterDevices(InputDevice connectDevice)
+    {
+        XRDebug.Log(connectDevice.name);
+        if (connectDevice.isValid)
+        {
+            if((connectDevice.characteristics & InputDeviceCharacteristics.Left)!=0)
+            {
+                XRDebug.Log("leftController is On");
+                leftController = connectDevice;
+            }
 
+        }
+    }
     /// <summary>
     /// 切换视角模式
     /// </summary>
@@ -115,6 +130,7 @@ public class XRMovementController : SingleTonMono<XRMovementController>
     {
         // TurnCheck();
         TouchMoveCheck();
+        //TEST:
         if (Input.GetKeyDown(KeyCode.A))
         {
             UIManager.GetInstance.ChangeViewMode(ViewMode.Ground);

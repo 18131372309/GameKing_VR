@@ -2,17 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class XRExtension : MonoBehaviour
+public static class XRExtension
 {
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+  public static bool IsGreaterThan(this Vector3 a, Vector3 b) {
+    return (a.sqrMagnitude > b.sqrMagnitude);
+  }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+  public static bool IsLessThan(this Vector3 a, Vector3 b) {
+    return (a.sqrMagnitude < b.sqrMagnitude);
+  }
 }

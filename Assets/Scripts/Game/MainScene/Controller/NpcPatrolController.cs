@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Events;
 using Random = UnityEngine.Random;
@@ -136,9 +137,11 @@ public class NpcPatrolController : MonoBehaviour
                     index = 0;
                 }
 
-                target.transform.LookAt(points[index].position);
+                //target.transform.LookAt(points[index].position);
+                target.transform.DOLookAt(points[index].position, 1f);
                 UpdatePatrolMessage(target, points[index]);
             }
+
 
             yield return new WaitForEndOfFrame();
         }
@@ -167,7 +170,7 @@ public class NpcPatrolController : MonoBehaviour
             if (distance < 0.1f)
             {
                 index = Random.Range(0, points.Length);
-                target.transform.LookAt(points[index]);
+                target.transform.DOLookAt(points[index].position, 1f);
                 UpdatePatrolMessage(target, points[index]);
             }
 

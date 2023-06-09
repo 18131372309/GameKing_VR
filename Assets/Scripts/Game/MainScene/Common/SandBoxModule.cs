@@ -18,7 +18,11 @@ public class SandBoxModule : SingleTonClass<SandBoxModule>
     private Vector3 lastDevicePosition;
     private Quaternion lastDeviceRotation;
 
-    private int DoFrameTime = 0;
+    private float lastDistance = 0;
+    private float currentDistance = 0;
+
+    private int DoFrameTimeR = 0;
+    private int DoFrameTimeS = 0;
 
     private float baseSpeed = 50f;
     private float axisPosXRate = 0.5f;
@@ -26,10 +30,21 @@ public class SandBoxModule : SingleTonClass<SandBoxModule>
 
     private float axisX = 0;
     private float axisRotationY = 0;
+
+    private float axisDistance = 0;
+
     private int direction = -1;
 
     private bool isSandboxMode = false;
 
+    private float scaleDefault = 0.5f;
+    private float scaleLimitUp = 3.5f;
+    private float scaleLimitDown = 0.3f;
+
+    private Vector3 originSandBoxScale;
+
+    private Button3DCustom enterBtn;
+    private Button3DCustom returnBtn;
 
     /// <summary>
     /// 數據初始化
@@ -44,8 +59,29 @@ public class SandBoxModule : SingleTonClass<SandBoxModule>
         sandBoxModel = GameObject.Find("SandBoxModel");
         landModel = GameObject.Find("LandModel");
 
+        enterBtn = GameObject.Find("enter3DButton_SD").GetComponent<Button3DCustom>();
+        returnBtn = GameObject.Find("return3DButton_SD").GetComponent<Button3DCustom>();
+
         lastDevicePosition = Vector3.zero;
         lastDeviceRotation = Quaternion.identity;
+        lastDistance = 0;
+
+        sandBoxModel.transform.localScale = sandBoxModel.transform.localScale * (1 + scaleDefault);
+        originSandBoxScale = sandBoxModel.transform.localScale;
+
+
+        InitListener();
+    }
+
+    void InitListener()
+    {
+        enterBtn.AddListener(() =>
+        {
+            UIManager.GetInstance.ChangeViewMode(ViewMode.Ground);
+            UIManager.GetInstance.SetViewModeIcon(ViewMode.Ground);
+        });
+
+        returnBtn.AddListener(() => { UIManager.GetInstance.ReturnEnterScene(); });
     }
 
 
@@ -61,12 +97,12 @@ public class SandBoxModule : SingleTonClass<SandBoxModule>
             landModel.SetActive(false);
             sandBoxModel.SetActive(true);
             XRUtils.GetInstance().SetPassThrough(true);
-            
+            //XRUtils.GetInstance().SetHandleModelState(false);
+
             XROriginInstance.curViewMode = ViewMode.SandBox;
             XRMovementController.GetInstance.TeleportXROrigin(sanboxView.position, Quaternion.identity);
-            
+
             isSandboxMode = true;
-          
         }
     }
 
@@ -77,13 +113,13 @@ public class SandBoxModule : SingleTonClass<SandBoxModule>
             landModel.SetActive(true);
             sandBoxModel.SetActive(false);
             XRUtils.GetInstance().SetPassThrough(false);
-            
+            //XRUtils.GetInstance().SetHandleModelState(true);
+
             isSandboxMode = false;
         }
     }
 
-    
-    //TODO:后续3个都拆分整理成OnEnter形式
+
     /// <summary>
     /// 切换沙箱视角
     /// </summary>
@@ -131,8 +167,8 @@ public class SandBoxModule : SingleTonClass<SandBoxModule>
     /// <param name="rotation"></param>
     public void DoRotateModel(Vector3 positon, Quaternion rotation)
     {
-        DoFrameTime++;
-        if (DoFrameTime <= 1)
+        DoFrameTimeR++;
+        if (DoFrameTimeR <= 1)
         {
             lastDevicePosition = positon;
             lastDeviceRotation = rotation;
@@ -150,9 +186,48 @@ public class SandBoxModule : SingleTonClass<SandBoxModule>
         }
     }
 
+    /// <summary>
+    /// 沙盘缩放
+    /// </summary>
+    /// <param name="left"></param>
+    /// <param name="right"></param>
+    public void DoScaleModel(Vector3 left, Vector3 right)
+    {
+        currentDistance = Vector3.Distance(left, right);
+
+        DoFrameTimeS++;
+
+        if (DoFrameTimeS <= 1)
+        {
+            lastDistance = currentDistance;
+        }
+
+        axisDistance = currentDistance - lastDistance;
+        // XRDebug.Log("axisDistance:" + axisDistance.ToString());
+
+        sandBoxModel.transform.localScale = sandBoxModel.transform.localScale * (1 + axisDistance);
+
+        // 范围限制
+        if (sandBoxModel.transform.localScale.IsGreaterThan(originSandBoxScale * (1 + scaleLimitUp)))
+        {
+            sandBoxModel.transform.localScale = originSandBoxScale * (1 + scaleLimitUp);
+        }
+        else if (sandBoxModel.transform.localScale.IsLessThan(originSandBoxScale * (1 - scaleLimitDown)))
+        {
+            sandBoxModel.transform.localScale = originSandBoxScale * (1 - scaleLimitDown);
+        }
+
+        lastDistance = currentDistance;
+    }
+
 
     public void StopRotateModel()
     {
-        DoFrameTime = 0;
+        DoFrameTimeR = 0;
+    }
+
+    public void StopScaleModel()
+    {
+        DoFrameTimeS = 0;
     }
 }

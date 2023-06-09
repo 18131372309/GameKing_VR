@@ -39,7 +39,7 @@ public class UIManager : SingleTonMono<UIManager>
         {
             _viewModeSelectUi.ShowUI();
         }
-        else
+        else if (state == 2)
         {
             _viewModeSelectUi.HideUI();
         }
@@ -56,12 +56,39 @@ public class UIManager : SingleTonMono<UIManager>
         {
             case ViewMode.Ground:
                 FirstViewModule.GetInstance().OnEnter();
+                StartCoroutine(ShowGuide(GuideMode.FirstViewGuide));
                 break;
             case ViewMode.Sky:
                 GodViewModlue.GetInstance().OnEnter();
+                StartCoroutine(ShowGuide(GuideMode.GodViewGuide));
                 break;
             case ViewMode.SandBox:
                 SandBoxModule.GetInstance().OnEnter();
+                StartCoroutine(ShowGuide(GuideMode.SandBoxGuide));
+                break;
+        }
+        
+    }
+
+    IEnumerator ShowGuide(GuideMode guideMode)
+    {
+        yield return new WaitForSeconds(0.5f);
+        XRPlayerGuide.GetInstance().ChangeHandleGuide(guideMode);
+    }
+    
+
+    public void SetViewModeIcon(ViewMode viewMode)
+    {
+        switch (viewMode)
+        {
+            case ViewMode.Ground:
+                _viewModeSelectUi.SetFirstViewIcon();
+                break;
+            case ViewMode.Sky:
+                _viewModeSelectUi.SetGodViewIcon();
+                break;
+            case ViewMode.SandBox:
+                _viewModeSelectUi.SetBoxViewIcon();
                 break;
         }
     }
@@ -71,7 +98,7 @@ public class UIManager : SingleTonMono<UIManager>
         FirstViewModule.GetInstance().OnExit();
         GodViewModlue.GetInstance().OnExit();
         SandBoxModule.GetInstance().OnExit();
-        
+
         XRSceneManager.GetInstance.TeleportDifferentScene("EnterScene");
     }
 

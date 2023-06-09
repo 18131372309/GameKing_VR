@@ -1,0 +1,22 @@
+{
+  "Infos": [
+    {
+      "sceneName": "星光岛",
+      "targetScene": "SceneXGD",
+      "description": "星光岛场景",
+      "image_url": "dajuyuan.png"
+    },
+    {
+      "sceneName": "三庙一塔",
+      "targetScene": "SceneSMYT",
+      "description": "三庙一塔场景",
+      "image_url": "sanmiaoyita.png"
+    },
+    {
+      "sceneName": "红谷滩",
+      "targetScene": "SceneHGT",
+      "description": "红谷滩场景",
+      "image_url": "redgutan.png"
+    }
+  ]
+}

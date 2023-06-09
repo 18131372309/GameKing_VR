@@ -8,19 +8,31 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController>
 {
     private InputDevice rightController;
+    private InputDevice leftController;
 
     private XRRayInteractor rightRay;
 
     private RaycastHit hitInfo;
 
     private bool rightTriggrtDown = false;
-    private int rightTriggerTimes = 0;
-    private bool gripButtonDown = false;
+  //  private int rightTriggerTimes = 0;
+    private bool rightGripButtonDown = false;
+    private bool leftGripButtonDown = false;
 
-    private Vector3 devicePosition;
+    private Vector3 rightDevicePosition;
+    private Vector3 leftDevicePosition;
+
     private bool isRotatingModel = false;
+    private bool isScalingModel = false;
 
-    private Quaternion deviceRotation;
+    private bool isLeftInScaleMode = false;
+    private bool isRightInScaleMode = false;
+
+    private Quaternion rightDeviceRotation;
+
+    private int rayState = 0;
+    private Button3DCustom currentBtn;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -48,9 +60,28 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
     void InitDevices()
     {
         rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+        leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+
+        InputDevices.deviceConnected += RegisterDevices;
 
         rightRay = XROriginInstance.XROriginObj.transform.Find("Camera Offset/RightHand Controller")
             .GetComponent<XRRayInteractor>();
+    }
+
+    void RegisterDevices(InputDevice connectDevice)
+    {
+        if (connectDevice.isValid)
+        {
+            if ((connectDevice.characteristics & InputDeviceCharacteristics.Left) != 0)
+            {
+                leftController = connectDevice;
+            }
+
+            if ((connectDevice.characteristics & InputDeviceCharacteristics.Right) != 0)
+            {
+                rightController = connectDevice;
+            }
+        }
     }
 
     // Update is called once per frame
@@ -60,13 +91,14 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
         // rightController.TryGetFeatureValue(CommonUsages.devicePosition, out v);
         // XRDebug.Log(v.ToString()); 
         RayCastUpdate();
-        
+
         //TODO:Update检测恢复
         // if (!rightController.isValid)
         // {
         //     
         // }
     }
+
 
     /// <summary>
     /// 右手炳射线检测，可自定义目标
@@ -100,18 +132,20 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
                 }
             }
 
-            //:沙盘
+            //:沙盘旋转
             if (hitInfo.collider.CompareTag("sandBoxModel"))
             {
-                if (rightController.TryGetFeatureValue(CommonUsages.gripButton, out gripButtonDown))
+                if (rightController.TryGetFeatureValue(CommonUsages.gripButton, out rightGripButtonDown))
                 {
-
-                    if (gripButtonDown)
+                    if (rightGripButtonDown)
                     {
                         isRotatingModel = true;
-                        rightController.TryGetFeatureValue(CommonUsages.devicePosition, out devicePosition);
-                        rightController.TryGetFeatureValue(CommonUsages.deviceRotation, out deviceRotation);
-                        SandBoxModule.GetInstance().DoRotateModel(devicePosition,deviceRotation);
+                        if (!isScalingModel)
+                        {
+                            rightController.TryGetFeatureValue(CommonUsages.devicePosition, out rightDevicePosition);
+                            rightController.TryGetFeatureValue(CommonUsages.deviceRotation, out rightDeviceRotation);
+                            SandBoxModule.GetInstance().DoRotateModel(rightDevicePosition, rightDeviceRotation);
+                        }
                     }
                     else
                     {
@@ -120,9 +154,7 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
                             SandBoxModule.GetInstance().StopRotateModel();
                             isRotatingModel = false;
                         }
-                       
                     }
-                  
                 }
 
                 //射線指向退出沙盤
@@ -144,6 +176,96 @@ public class XRCustomRaycastController : SingleTonMono<XRCustomRaycastController
                 //         }
                 //     }
                 // }
+            }
+
+            //TODO：后续统一封装，3DButton触发以及onenter、highlight、onexit等触发
+            if (hitInfo.collider.CompareTag("3DButton"))
+            {
+                if (rightController.TryGetFeatureValue(CommonUsages.triggerButton, out rightTriggrtDown))
+                {
+                    if (rightTriggrtDown)
+                    {
+                        XRHandleData.rightTriggerTimes++;
+                        if (XRHandleData.rightTriggerTimes == 1)
+                        {
+                            hitInfo.collider.GetComponent<Button3DCustom>().OnClick();
+                        }
+                    }
+                    else
+                    {
+                        if (XRHandleData.rightTriggerTimes != 0)
+                        {
+                            XRHandleData.rightTriggerTimes = 0;
+                        }
+                    }
+                }
+
+                if (rayState != 1)
+                {
+                    rayState = 1;
+                    currentBtn = hitInfo.collider.GetComponent<Button3DCustom>();
+                    currentBtn.OnRayEnter();
+                }
+            }
+        }
+        else
+        {
+            if (rayState != 0)
+            {
+                rayState = 0;
+                currentBtn.OnRayExit();
+                currentBtn = null;
+            }
+        }
+
+
+        //沙盘缩放
+        if (rightController.TryGetFeatureValue(CommonUsages.gripButton, out rightGripButtonDown))
+        {
+            if (rightGripButtonDown)
+            {
+                isRightInScaleMode = true;
+            }
+            else
+            {
+                isRightInScaleMode = false;
+            }
+        }
+
+        if (leftController.TryGetFeatureValue(CommonUsages.gripButton, out leftGripButtonDown))
+        {
+            if (leftGripButtonDown)
+            {
+                isLeftInScaleMode = true;
+            }
+            else
+            {
+                isLeftInScaleMode = false;
+            }
+        }
+
+        if (isRightInScaleMode && isLeftInScaleMode)
+        {
+            isScalingModel = true;
+
+            rightController.TryGetFeatureValue(CommonUsages.devicePosition, out rightDevicePosition);
+            leftController.TryGetFeatureValue(CommonUsages.devicePosition, out leftDevicePosition);
+
+            SandBoxModule.GetInstance().DoScaleModel(leftDevicePosition, rightDevicePosition);
+
+            //TODO：添加bool判断，缩放时禁用旋转
+            if (rightRay.enabled)
+            {
+                rightRay.enabled = false;
+            }
+        }
+        else
+        {
+            if (isScalingModel)
+            {
+                SandBoxModule.GetInstance().StopScaleModel();
+                isScalingModel = false;
+                rightRay.enabled = true;
             }
         }
     }

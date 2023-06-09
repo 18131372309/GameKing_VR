@@ -53,13 +53,32 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
         //Debug.Log("ChangeSceneInit");
     }
 
-    //TODO:手柄掉綫重連 
+    //手柄掉綫重連 
     void InitDevices()
     {
         leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
         rightController = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+        InputDevices.deviceConnected += RegisterDevices;
     }
 
+    void RegisterDevices(InputDevice connectDevice)
+    {
+        XRDebug.Log(connectDevice.name);
+        if (connectDevice.isValid)
+        {
+            if ((connectDevice.characteristics & InputDeviceCharacteristics.Left) != 0)
+            {
+                XRDebug.Log("leftController is On");
+                leftController = connectDevice;
+            }
+
+            if ((connectDevice.characteristics & InputDeviceCharacteristics.Right) != 0)
+            {
+                XRDebug.Log("rightController is On");
+                rightController = connectDevice;
+            }
+        }
+    }
 
     // Update is called once per frame
     void Update()
@@ -170,7 +189,10 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
                 rightFirstKeyTimes++;
                 if (rightFirstKeyTimes == 1)
                 {
-                   UIManager.GetInstance.ShowViewModeSelectUi();
+                    if (XROriginInstance.curViewMode != ViewMode.SandBox)
+                    {
+                        UIManager.GetInstance.ShowViewModeSelectUi();
+                    }
                 }
             }
             else
@@ -187,7 +209,7 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
         if (leftController.TryGetFeatureValue(CommonUsages.secondaryButton, out leftSecondKey))
         {
             //  XRDebug.Log("L-secondaryButton:" + leftSecondKey);
-            
+
 
             if (leftSecondKey)
             {
@@ -203,8 +225,8 @@ public class XRCustomInputController : SingleTonMono<XRCustomInputController>
                     // {
                     //     XROriginInstance.XROriginObj.AddComponent<Rigidbody>();
                     // }
-                  //  XRDebug.Log("change_sandBoxMode");
-                  //  EventDispatcher.GetInstance().DispatchEvent("change_sandBoxMode");
+                    //  XRDebug.Log("change_sandBoxMode");
+                    //  EventDispatcher.GetInstance().DispatchEvent("change_sandBoxMode");
                 }
             }
             else
